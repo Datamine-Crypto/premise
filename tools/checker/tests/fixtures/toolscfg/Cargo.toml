@@ -1,0 +1,3 @@
+[workspace]
+members = ["spec","tools/probe"]
+resolver = "2"

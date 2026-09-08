@@ -1,0 +1,5 @@
+[workspace]
+members = ["spec"]
+
+[workspace.package]
+description = "the sample crate whose one entry of prose reads as a reason and so passes the manifest law"

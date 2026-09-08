@@ -1,0 +1,5 @@
+[workspace]
+members = ["engine", "relay", "spec", "app"]
+
+[workspace.dependencies]
+spec = { path = "spec" }

@@ -1,0 +1,2 @@
+[workspace]
+members = ["spec","app","patterns","patterns_macros"]

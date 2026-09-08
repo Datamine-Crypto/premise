@@ -1,0 +1,8 @@
+[package]
+name = "probe"
+version.workspace = true
+edition.workspace = true
+autobins = false
+
+[[bin]]
+name = "ghost"

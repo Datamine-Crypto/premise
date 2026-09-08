@@ -1,0 +1,19 @@
+[package]
+name = "premise_macros"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+description = "the reason macros of Premise, because and source, and the Record derive that reads a struct as fields"
+
+[lib]
+name = "patterns_macros"
+path = "src/lib.rs"
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["derive"] }

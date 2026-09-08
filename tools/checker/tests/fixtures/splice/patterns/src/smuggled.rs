@@ -1,0 +1,1 @@
+include!("../tests/smuggled.rs");

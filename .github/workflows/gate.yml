@@ -1,0 +1,28 @@
+name: gate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo run -q -p premise_gate
+      - run: git diff --exit-code -- premise.census
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85"
+      - run: cargo build --workspace --locked
+        env:
+          RUSTUP_TOOLCHAIN: "1.85"
+      - run: cargo test --workspace --locked --no-run
+        env:
+          RUSTUP_TOOLCHAIN: "1.85"

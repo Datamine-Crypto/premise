@@ -1,0 +1,21 @@
+[package]
+name = "premise_gate"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+default-run = "gate"
+license.workspace = true
+repository.workspace = true
+
+description = "the gate of Premise: one command that compiles the workspace, runs the four laws over it, and runs every test, beside the catalog that lists the pattern library and the orientation questions the thesis is measured with"
+
+[[bin]]
+name = "gate"
+path = "src/main.rs"
+
+[dependencies]
+premise_checker = { path = "../checker", version = "0.1.0" }
+premise_macros = { path = "../../patterns_macros", version = "0.1.0" }
+syn = { version = "2", features = ["full", "visit", "extra-traits"] }
+quote = "1"
+proc-macro2 = { version = "1", features = ["span-locations"] }

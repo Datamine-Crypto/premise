@@ -1,0 +1,7 @@
+[package]
+name = "patterns"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+patterns_macros = { path = "../patterns_macros" }

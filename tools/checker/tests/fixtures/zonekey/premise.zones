@@ -1,0 +1,2 @@
+spec = spec
+gen = gen/spec.ts

@@ -1,0 +1,8 @@
+patterns = premise
+patterns = premise_macros
+patterns = premise_web3
+patterns = premise_cloudflare
+spec = spec
+app = app
+tools = premise_checker
+tools = premise_gate

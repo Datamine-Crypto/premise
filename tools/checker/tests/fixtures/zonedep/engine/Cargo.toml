@@ -1,0 +1,10 @@
+[package]
+name = "engine"
+version = "0.1.0"
+edition = "2021"
+
+[target."cfg(windows)".dependencies]
+spec = { path = "../spec" }
+
+[target."cfg(unix)".dependencies]
+spec = { path = "../spec" }

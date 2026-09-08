@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["patterns", "patterns_macros", "web3", "cloudflare", "spec", "app", "tools/checker", "tools/gate"]
+exclude = ["tools/checker/tests"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+repository = "https://github.com/Datamine-Crypto/premise"
+
+[workspace.dependencies]
+premise = { path = "patterns" }
+premise_macros = { path = "patterns_macros" }
+premise_web3 = { path = "web3" }
+premise_cloudflare = { path = "cloudflare" }

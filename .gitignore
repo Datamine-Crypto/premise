@@ -1,0 +1,6 @@
+target/
+node_modules/
+*.orig
+*.rej
+tools/checker/tests/**/Cargo.lock
+tools/checker/tests/fixtures/*/ailang.census

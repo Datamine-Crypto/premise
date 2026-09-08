@@ -1,0 +1,11 @@
+[package]
+name = "spec"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+patterns = { path = "../patterns" }
+
+[[test]]
+name = "ghost"
+path = "src/ghost.rs"

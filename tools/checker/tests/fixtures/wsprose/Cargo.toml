@@ -1,0 +1,5 @@
+[workspace]
+members = ["spec"]
+
+[workspace.package]
+description = "the rate doubled after the spring review and nobody moved it"

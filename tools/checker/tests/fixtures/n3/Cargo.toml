@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["patterns_macros", "patterns", "spec", "app", "tools/probe"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"

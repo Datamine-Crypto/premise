@@ -1,0 +1,5 @@
+patterns = patterns
+patterns = patterns_macros
+patterns = vocab
+spec = spec
+app = app

@@ -1,0 +1,9 @@
+[package]
+name = "lint_prose"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+premise = { path = "../../../../../patterns" }

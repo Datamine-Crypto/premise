@@ -1,0 +1,8 @@
+[package]
+name = "probe"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "probe"
+path = "mod.rs"

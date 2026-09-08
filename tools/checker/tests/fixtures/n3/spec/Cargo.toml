@@ -1,0 +1,10 @@
+[package]
+name = "spec"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+patterns = { path = "../patterns" }
+
+[lib]
+path = "src/../../tools/probe/tests/lib.rs"

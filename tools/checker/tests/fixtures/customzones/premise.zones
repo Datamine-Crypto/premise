@@ -1,0 +1,3 @@
+patterns = lib
+spec = truth
+app = server

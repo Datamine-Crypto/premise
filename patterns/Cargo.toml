@@ -1,0 +1,17 @@
+[package]
+name = "premise"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+description = "the core pattern library of Premise: sequences, tables, records, money, days and text, every function carrying the reason it exists"
+
+[lib]
+name = "patterns"
+path = "src/lib.rs"
+
+[dependencies]
+premise_macros = { path = "../patterns_macros", version = "0.1.0" }
+hex = "0.4"

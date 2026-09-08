@@ -1,0 +1,8 @@
+[package]
+name = "spec"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+patterns = { path = "../patterns" }
+toml = "0.8"

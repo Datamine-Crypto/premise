@@ -1,0 +1,8 @@
+[package]
+name = "spec"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+patterns = { path = "../patterns" }
+outside = { path = "../../n4_outside" }

@@ -1,0 +1,17 @@
+[package]
+name = "premise_cloudflare"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+description = "the Worker library of Premise: records in D1, compressed objects in R2, JSON field shapes and the HTTP edge helpers a Worker binds its own policy to"
+
+[dependencies]
+premise = { path = "../patterns", version = "0.1.0" }
+premise_macros = { path = "../patterns_macros", version = "0.1.0" }
+worker = { version = "0.8", features = ["d1"] }
+wasm-bindgen = "0.2"
+serde_json = "1"
+flate2 = "1"
