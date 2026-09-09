@@ -82,8 +82,8 @@ Everything after "Run the gate" is reference you will come back to.
 | [`premise_macros`](https://crates.io/crates/premise_macros) | `patterns_macros` | `because!`, `source!`, `provisional!`, `#[derive(Record)]` |
 | [`premise_web3`](https://crates.io/crates/premise_web3) | `premise_web3` | addresses with their checksum, keccak, ABI decoding of event logs, pool arithmetic |
 | [`premise_cloudflare`](https://crates.io/crates/premise_cloudflare) | `premise_cloudflare` | records in D1, gzip objects in R2, the HTTP edge helpers a Worker binds its policy to |
-| [`premise_checker`](https://crates.io/crates/premise_checker) | `checker` | the four laws, as a library and a command |
-| [`premise_gate`](https://crates.io/crates/premise_gate) | | the gate, plus the `catalog` and `orient` commands |
+| `premise_checker` | `checker` | the four laws, as a library and a command |
+| `premise_gate` | | the gate, plus the `catalog` and `orient` commands |
 
 You depend on one:
 
@@ -95,8 +95,17 @@ premise = "0.1"
 `premise_macros` arrives transitively. Add `premise_web3` or `premise_cloudflare` only if you want a
 chain or a Worker. `spec/` and `app/` are worked examples in this repository and are not published.
 
-Publish in dependency order: `premise_macros`, then `premise`, then the rest. `cargo package` refuses
-a dependent until its dependency is on the registry, so the order is not optional.
+The two tools are not on the registry at all. They embed this file with `include_str!`, which reads
+from above the crate directory, so a packaged tarball would ship without the manual the checker
+explains itself from. Take them from the repository instead:
+
+```sh
+cargo install --git https://github.com/Datamine-Crypto/premise premise_gate
+```
+
+Publish the four libraries in dependency order: `premise_macros`, then `premise`, then the other
+two. `cargo package` refuses a dependent until its dependency is on the registry, so the order is
+not optional.
 
 ## ⚖️ The four laws
 

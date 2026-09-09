@@ -6,6 +6,7 @@ rust-version.workspace = true
 default-run = "gate"
 license.workspace = true
 repository.workspace = true
+publish = false
 
 description = "the gate of Premise: one command that compiles the workspace, runs the four laws over it, and runs every test, beside the catalog that lists the pattern library and the orientation questions the thesis is measured with"
 

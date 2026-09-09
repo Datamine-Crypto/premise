@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = false
 
 description = "the four laws of Premise, checked against a workspace: that logic lives in a pattern, that every value comes from the spec, that there are no comments, and that the program on disk is the one the compiler reads"
 
@@ -16,7 +17,7 @@ path = "src/main.rs"
 syn = { version = "2", features = ["full", "visit", "fold", "extra-traits"] }
 proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"
-premise_macros = { path = "../../patterns_macros" }
+premise_macros = { path = "../../patterns_macros", version = "0.1.0" }
 toml = "0.8"
 serde_json = "1"
 
