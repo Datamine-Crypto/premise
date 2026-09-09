@@ -840,3 +840,89 @@ fn a_readme_that_names_a_file_is_a_pointer_and_one_that_names_nothing_is_not() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_library_may_be_named_by_its_crate_rather_than_by_a_path() {
+    let dir = std::env::temp_dir().join(format!("premise_library_probe_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let away = dir.join("away").join("shed");
+    std::fs::create_dir_all(away.join("src")).unwrap();
+    std::fs::write(
+        away.join("Cargo.toml"),
+        "[package]\nname = \"shed\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    )
+    .unwrap();
+    std::fs::write(away.join("src").join("lib.rs"), "pub fn stowed<T>(items: &[T]) -> usize { items.len() }\n").unwrap();
+
+    let here = dir.join("here");
+    std::fs::create_dir_all(here.join("app").join("src")).unwrap();
+    std::fs::write(
+        here.join("Cargo.toml"),
+        "[workspace]\nresolver = \"2\"\nmembers = [\"app\"]\n",
+    )
+    .unwrap();
+    std::fs::write(
+        here.join("app").join("Cargo.toml"),
+        "[package]\nname = \"app\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\nshed = { path = \"../../away/shed\" }\n",
+    )
+    .unwrap();
+    std::fs::write(here.join("app").join("src").join("lib.rs"), "pub fn counted(items: &[u32]) -> usize { shed::stowed(items) }\n").unwrap();
+
+    let named = |line: &str| {
+        std::fs::write(here.join("premise.zones"), format!("{}\napp = app\n", line)).unwrap();
+        crate::forget_metadata();
+        checker::run(&here)
+            .iter()
+            .any(|d| d.code == "E-LOGIC-OUTSIDE-PATTERN" || d.code == "E-OUTSIDE-WORKSPACE")
+    };
+
+    assert!(
+        !named("library = ../away/shed"),
+        "a library named by a path is still read for the names it exports"
+    );
+    assert!(
+        !named("library = shed"),
+        "a library named by its crate is found through cargo, which is what lets one come from the registry"
+    );
+    assert!(
+        named("library = nothing_of_that_name"),
+        "a library that is neither a path nor a crate cargo knows is not silently taken as absent"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+fn forget_metadata() {
+    checker::cargo::forget();
+}
+
+#[test]
+fn a_reason_on_a_thread_local_names_something_that_is_declared() {
+    let dir = std::env::temp_dir().join(format!("premise_thread_local_probe_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let src = dir.join("spec").join("src");
+    std::fs::create_dir_all(&src).unwrap();
+    std::fs::write(dir.join("Cargo.toml"), "[workspace]\nmembers = [\"spec\"]\n").unwrap();
+    std::fs::write(dir.join("premise.zones"), "spec = spec\n").unwrap();
+    std::fs::write(
+        dir.join("spec").join("Cargo.toml"),
+        "[package]\nname = \"spec\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    )
+    .unwrap();
+    let held = concat!(
+        "use std::cell::RefCell;\n",
+        "thread_local! {\n",
+        "    static SEEN: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };\n",
+        "}\n",
+        "because!(SEEN, \"the names this thread has already reported, kept per thread because two reports read different trees\");\n",
+    );
+    std::fs::write(src.join("lib.rs"), held).unwrap();
+    let orphaned = checker::run(&dir)
+        .iter()
+        .any(|d| d.code == "E-ORPHAN-REASON");
+    assert!(
+        !orphaned,
+        "thread_local! declares the statics inside it, so a reason on one is not a reason for nothing"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

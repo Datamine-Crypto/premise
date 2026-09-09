@@ -150,14 +150,20 @@ checked; the rule that a crate root forbids `unknown_lints` reads the crate's ma
 that root, so it is silent there.
 
 A project that takes the library from outside its workspace adds one line per library crate,
-`library = <path to the crate directory>`, such as `library = ../premise/patterns`. The checker
-reads that crate's manifest for its crate name, zones the package as `patterns`, learns the names
-it exports so `app/` may call them and `spec/` may name them, and lets a path dependency resolve
-into it without `E-OUTSIDE-WORKSPACE`. It does not scan the library's files as the project's own,
-and the gate does not run its tests: the library answers to its own gate in its own workspace. A
-path in the code may then start from the library's crate name or from the crate name of any
-member the `patterns` zone holds, and a project's own pattern crate carries a name of its own,
-since the library already took `patterns`.
+`library = <crate name>`, such as `library = premise`. The checker asks cargo where that crate's
+source is, so a library taken from the registry works the same as one sitting beside the project,
+and a version bump is an edit to `Cargo.toml` rather than to a path. A directory path still works,
+`library = ../premise/patterns`, for a library that is not a dependency at all; the name is tried
+as a path first and asked of cargo only when nothing is there, so the extra question costs nothing
+in the common case.
+
+Either way the checker reads that crate's manifest for its crate name, zones the package as
+`patterns`, learns the names it exports so `app/` may call them and `spec/` may name them, and lets
+a path dependency resolve into it without `E-OUTSIDE-WORKSPACE`. It does not scan the library's
+files as the project's own, and the gate does not run its tests: the library answers to its own gate
+in its own workspace. A path in the code may then start from the library's crate name or from the
+crate name of any member the `patterns` zone holds, and a project's own pattern crate carries a name
+of its own, since the library already took `patterns`.
 
 The laws read `.rs` files and manifests, and nothing else. A markdown file is in no zone and is
 governed by no law, which is why a crate may carry a README without needing an exemption. The one

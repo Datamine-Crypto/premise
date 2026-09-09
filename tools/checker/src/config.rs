@@ -60,7 +60,11 @@ fn package_name_of(manifest: &str) -> Option<String> {
 }
 
 fn library_at(root: &Path, value: &str) -> Option<Library> {
-    let dir = crate::modules::real(&root.join(value));
+    let beside = crate::modules::real(&root.join(value));
+    let dir = match beside.join("Cargo.toml").is_file() {
+        true => beside,
+        false => crate::modules::real(&crate::cargo::dependency_dir(root, value)?),
+    };
     let manifest = std::fs::read_to_string(dir.join("Cargo.toml")).ok()?;
     let package = package_name_of(&manifest)?;
     Some(Library {

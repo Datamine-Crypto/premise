@@ -212,6 +212,43 @@ fn gated_item(it: &syn::Item) -> bool {
     })
 }
 
+pub const THREAD_LOCAL: &str = "thread_local";
+patterns_macros::because!(
+    THREAD_LOCAL,
+    "the one macro in the standard library that declares a value item, so a reason attached to what it declares names something that is there rather than nothing"
+);
+
+const STATIC_WORD: &str = "static";
+patterns_macros::because!(
+    STATIC_WORD,
+    "the word a declaration inside that macro begins with, read from tokens because a macro body is not parsed into items until it expands"
+);
+
+fn statics_in(tokens: proc_macro2::TokenStream) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut after = false;
+    let mut quoted = false;
+    for t in tokens {
+        match t {
+            proc_macro2::TokenTree::Ident(id) => {
+                let word = crate::names::plain(&id);
+                if after {
+                    out.push(word);
+                    after = false;
+                } else {
+                    after = word == STATIC_WORD && !quoted;
+                }
+                quoted = false;
+            }
+            proc_macro2::TokenTree::Punct(p) => {
+                quoted = p.as_char() == '\'';
+            }
+            _ => quoted = false,
+        }
+    }
+    out
+}
+
 fn scan_items(items: &[syn::Item], f: &mut Found) {
     for it in items {
         if gated_item(it) {
@@ -405,6 +442,15 @@ fn scan_items(items: &[syn::Item], f: &mut Found) {
                     .last()
                     .map(|s| crate::names::plain(&s.ident))
                     .unwrap_or_default();
+                if name == THREAD_LOCAL {
+                    for held in statics_in(m.mac.tokens.clone()) {
+                        f.declared.insert(held.clone());
+                        f.defined.insert(held.clone());
+                        f.value_items.insert(held.clone());
+                        f.named.push((held, m.span().start().line, false, false));
+                    }
+                    continue;
+                }
                 if !LANGUAGE.contains(&name.as_str()) {
                     continue;
                 }

@@ -1,23 +1,22 @@
-use std::sync::RwLock;
+use std::cell::RefCell;
 
-static ROOTS: RwLock<Vec<String>> = RwLock::new(Vec::new());
+thread_local! {
+    static ROOTS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+}
 patterns_macros::because!(
     ROOTS,
-    "the crate names a governed path may start from to reach a pattern, set once per report from the zones file, because the scanners see one file at a time and a file does not say which library its project takes"
+    "the crate names a governed path may start from to reach a pattern, set once per report from the zones file, held per thread because a report is scanned on one thread and two reports running beside each other read different zones files"
 );
 
 pub fn set(names: Vec<String>) {
-    if let Ok(mut held) = ROOTS.write() {
-        *held = names;
-    }
+    ROOTS.with(|held| {
+        *held.borrow_mut() = names;
+    });
 }
 
 pub fn is(name: &str) -> bool {
     if name == crate::config::HOME_LIBRARY {
         return true;
     }
-    match ROOTS.read() {
-        Ok(held) => held.iter().any(|n| n == name),
-        Err(_) => false,
-    }
+    ROOTS.with(|held| held.borrow().iter().any(|n| n == name))
 }

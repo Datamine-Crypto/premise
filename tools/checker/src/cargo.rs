@@ -70,6 +70,11 @@ pub fn forget() {
             cache.clear();
         }
     }
+    if let Some(held) = DIRS.get() {
+        if let Ok(mut cache) = held.lock() {
+            cache.clear();
+        }
+    }
 }
 
 pub fn read(root: &Path) -> Option<Meta> {
@@ -188,4 +193,71 @@ pub fn test_programs(root: &Path, package: &str) -> Vec<PathBuf> {
     }
     found.sort();
     found
+}
+
+type Placed = std::collections::HashMap<(PathBuf, u64, u64), std::collections::BTreeMap<String, PathBuf>>;
+
+static DIRS: std::sync::OnceLock<std::sync::Mutex<Placed>> = std::sync::OnceLock::new();
+patterns_macros::because!(
+    DIRS,
+    "one answer per workspace root for where every resolved dependency's source sits, kept apart from the members answer because it costs a second cargo run and only a zones file naming a library by its crate name ever asks for it"
+);
+
+pub fn dependency_dir(root: &Path, name: &str) -> Option<PathBuf> {
+    let (changed, len) = stamp(root);
+    let key = (root.to_path_buf(), changed, len);
+    let held = DIRS.get_or_init(|| std::sync::Mutex::new(Placed::new()));
+    if let Ok(cache) = held.lock() {
+        if let Some(hit) = cache.get(&key) {
+            return hit.get(name).cloned();
+        }
+    }
+    let found = dependency_dirs_fresh(root);
+    let answer = found.get(name).cloned();
+    if let Ok(mut cache) = held.lock() {
+        cache.insert(key, found);
+    }
+    answer
+}
+
+fn dependency_dirs_fresh(root: &Path) -> std::collections::BTreeMap<String, PathBuf> {
+    let mut out = std::collections::BTreeMap::new();
+    if !root.join("Cargo.toml").is_file() {
+        return out;
+    }
+    let ran = std::process::Command::new(
+        std::env::var("CARGO").unwrap_or_else(|_| String::from("cargo")),
+    )
+    .arg("metadata")
+    .arg("--format-version")
+    .arg("1")
+    .arg("--manifest-path")
+    .arg(root.join("Cargo.toml"))
+    .output();
+    let ran = match ran {
+        Ok(v) if v.status.success() => v,
+        _ => return out,
+    };
+    let doc: Value = match serde_json::from_slice(&ran.stdout) {
+        Ok(v) => v,
+        Err(_) => return out,
+    };
+    let listed = match doc.get("packages").and_then(|p| p.as_array()) {
+        Some(v) => v,
+        None => return out,
+    };
+    for p in listed {
+        let name = match p.get("name").and_then(|n| n.as_str()) {
+            Some(n) => n.to_string(),
+            None => continue,
+        };
+        let manifest = match p.get("manifest_path").and_then(|m| m.as_str()) {
+            Some(m) => PathBuf::from(m),
+            None => continue,
+        };
+        if let Some(dir) = manifest.parent() {
+            out.insert(name, dir.to_path_buf());
+        }
+    }
+    out
 }
