@@ -882,6 +882,172 @@ pub fn report(root: &Path) -> Report {
     on_big_stack(move || report_here(&here))
 }
 
+const HOLE: &str = "{}";
+because!(
+    HOLE,
+    "where the offending words go in a message written once and filled in per site, so two reports of one check are one string rather than two that drift"
+);
+
+const DIGITS_WRITTEN: &str = "writes {} into prose, so a value lives outside the spec where nothing checks it and nothing keeps two copies of it equal. Name it: a spec const if it is a value, or a source! item if it is the study, contract or release the reason rests on, then cite that instead";
+because!(
+    DIGITS_WRITTEN,
+    "what a reason carrying digits is told, which is that the value now has a second copy nothing compares"
+);
+
+const VALUE_SPELLED: &str = "spells {} in prose, which is the value itself, so the reason goes stale the day the value changes. Say why this value and not another";
+because!(
+    VALUE_SPELLED,
+    "what a reason spelling out its own item's value is told, which is a different fault from digits because the words read as English until the value moves"
+);
+
+struct Vocab {
+    names: Vec<String>,
+    ctx: String,
+    file: String,
+    line: usize,
+    item: String,
+    excused: bool,
+}
+
+fn fact_in_reason(rel: &str, line: usize, wrote: &str, item: &str, said: &str, shown: &str) -> Diag {
+    Diag::new(
+        "E-FACT-IN-REASON",
+        rel,
+        line,
+        format!("{}!({}) {}", wrote, item, said.replace(HOLE, shown)),
+    )
+}
+
+fn overlapping_vocabularies(vocabs: &[Vocab]) -> Vec<Diag> {
+    let mut diags: Vec<Diag> = Vec::new();
+    for a in 0..vocabs.len() {
+        for b in (a + 1)..vocabs.len() {
+            let one = &vocabs[a];
+            let two = &vocabs[b];
+            if one.excused || two.excused || one.ctx == two.ctx {
+                continue;
+            }
+            let apart = shape::set_apart(&one.names, &two.names);
+            let smallest = one.names.len().min(two.names.len());
+            if apart > smallest {
+                continue;
+            }
+            let a_shared = one.ctx == boundary::SHARED;
+            let b_shared = two.ctx == boundary::SHARED;
+            let (file, line, mine, ctx, theirs) = match b_shared && !a_shared {
+                true => (&one.file, one.line, &one.item, &one.ctx, &two.item),
+                false => (&two.file, two.line, &two.item, &two.ctx, &one.item),
+            };
+            let shared = a_shared || b_shared;
+            let note = if shared && apart == 0 {
+                format!(
+                    "{} in {} repeats contexts::shared::vocabulary::{}; name the shared type instead",
+                    mine, ctx, theirs
+                )
+            } else if shared {
+                format!(
+                    "{} in {} differs in {} variants from contexts::shared::vocabulary::{}",
+                    mine, ctx, apart, theirs
+                )
+            } else if apart == 0 {
+                format!(
+                    "{} in {} and {} in {} are the same vocabulary; move it to contexts/shared",
+                    two.item, two.ctx, one.item, one.ctx
+                )
+            } else {
+                format!(
+                    "{} in {} differs in {} variants from {} in {} at {}:{}",
+                    two.item, two.ctx, apart, one.item, one.ctx, one.file, one.line
+                )
+            };
+            diags.push(Diag::new("E-DUP-VOCABULARY", file, line, note));
+            if !shared {
+                let back = match apart == 0 {
+                    true => format!(
+                        "{} in {} and {} in {} are the same vocabulary; move it to contexts/shared",
+                        one.item, one.ctx, two.item, two.ctx
+                    ),
+                    false => format!(
+                        "{} in {} differs in {} variants from {} in {} at {}:{}",
+                        one.item, one.ctx, apart, two.item, two.ctx, two.file, two.line
+                    ),
+                };
+                diags.push(Diag::new("E-DUP-VOCABULARY", &one.file, one.line, back));
+            }
+        }
+    }
+    diags
+}
+
+fn near_duplicate_shapes(shapes: &[Shaped]) -> Vec<Diag> {
+    let mut diags: Vec<Diag> = Vec::new();
+    let mut by_callee: HashMap<String, Vec<usize>> = HashMap::new();
+    for (i, s) in shapes.iter().enumerate() {
+        for c in &s.profile.callees {
+            by_callee.entry(c.clone()).or_default().push(i);
+        }
+    }
+    let mut pairs: Vec<(usize, usize)> = Vec::new();
+    for sharing in by_callee.values() {
+        for x in 0..sharing.len() {
+            for y in (x + 1)..sharing.len() {
+                let (lo, hi) = (sharing[x].min(sharing[y]), sharing[x].max(sharing[y]));
+                pairs.push((lo, hi));
+            }
+        }
+    }
+    pairs.sort();
+    pairs.dedup();
+    for (a, b) in pairs {
+        {
+            let (sa, sb) = (&shapes[a], &shapes[b]);
+            let (pa, fa, la, na) = (&sa.profile, &sa.file, sa.line, &sa.name);
+            let (pb, fb, lb, nb) = (&sb.profile, &sb.file, sb.line, &sb.name);
+            if (sa.binding || sb.binding) && fa != fb {
+                continue;
+            }
+            if pa.tokens.len().abs_diff(pb.tokens.len()) > MAX_DRIFT {
+                continue;
+            }
+            if sa.dictated || sb.dictated {
+                continue;
+            }
+            if names_each_other(sa, sb) {
+                continue;
+            }
+            if !pa.composed || !pb.composed {
+                continue;
+            }
+            let shortest = pa.tokens.len().min(pb.tokens.len());
+            if shortest < MIN_SHAPE_TOKENS {
+                continue;
+            }
+            let apart = shape::drift(pa, pb);
+            if apart == 0 || apart > MAX_DRIFT {
+                continue;
+            }
+            if !shape::only_names_differ(pa, pb) {
+                continue;
+            }
+            diags.push(Diag::new(
+                "E-NEAR-PATTERN",
+                fb,
+                lb,
+                format!(
+                    "{} is {} from {} at {}:{} ({}). Parameterise the difference",
+                    nb,
+                    tally(apart, "edit", "edits"),
+                    na,
+                    fa,
+                    la,
+                    shape::shown(&shape::differing(&pa.tokens, &pb.tokens))
+                ),
+            ));
+        }
+    }
+    diags
+}
+
 fn report_here(root: &Path) -> Report {
     let files = rust_files(root);
     let shouty = shouty_fns(&files);
@@ -938,7 +1104,7 @@ fn report_here(root: &Path) -> Report {
     }
     let mut shapes: Vec<Shaped> = Vec::new();
     let mut bindings: Vec<(syn::ItemFn, String, usize)> = Vec::new();
-    let mut vocabs: Vec<(Vec<String>, String, String, usize, String, bool)> = Vec::new();
+    let mut vocabs: Vec<Vocab> = Vec::new();
     let mut exported: Vec<(String, String, usize)> = Vec::new();
     let mut cited_at: Vec<(String, String, usize)> = Vec::new();
     let mut sources_seen: Vec<(String, String, usize)> = Vec::new();
@@ -1293,7 +1459,7 @@ fn report_here(root: &Path) -> Report {
                     continue;
                 }
                 let excused = cited.contains(&name);
-                vocabs.push((names, ctx.clone(), rel.clone(), line, name, excused));
+                vocabs.push(Vocab { names, ctx: ctx.clone(), file: rel.clone(), line, item: name, excused });
             }
         }
 
@@ -1532,12 +1698,7 @@ fn report_here(root: &Path) -> Report {
                     diags.push(Diag::new("E-WEAK-REASON", &rel, *line, format!("decided!({}, {}) {}", ty, tr, why)));
                 }
                 if let Some(shown) = because::states_a_fact(text) {
-                    diags.push(Diag::new(
-                        "E-FACT-IN-REASON",
-                        &rel,
-                        *line,
-                        format!("decided!({}, {}) writes {} into prose, so a value lives outside the spec where nothing checks it. Name the constant it belongs to instead", ty, tr, shown),
-                    ));
+                    diags.push(fact_in_reason(&rel, *line, "decided", &format!("{}, {}", ty, tr), DIGITS_WRITTEN, &shown));
                 }
                 if !f.declared.contains(ty) || !parts.iter().all(|p| f.declared.contains(p)) {
                     diags.push(Diag::new("E-ORPHAN-REASON", &rel, *line, format!("decided!({}, {}) names something not declared here", ty, tr)));
@@ -1568,25 +1729,17 @@ fn report_here(root: &Path) -> Report {
                     ));
                 }
             }
-            for (wrote, item, text, last, line) in &f.prose {
-                if let Some(why) = because::weak(item, last) {
+            for said in &f.prose {
+                if let Some(why) = because::weak(&said.item, &said.last) {
                     diags.push(Diag::new(
                         "E-WEAK-REASON",
                         &rel,
-                        *line,
-                        format!("{}!({}) {}", wrote, item, why),
+                        said.line,
+                        format!("{}!({}) {}", said.wrote, said.item, why),
                     ));
                 }
-                if let Some(shown) = because::states_a_fact(text) {
-                    diags.push(Diag::new(
-                        "E-FACT-IN-REASON",
-                        &rel,
-                        *line,
-                        format!(
-                            "{}!({}) writes {} into prose, so a value lives outside the spec where nothing checks it. Name the constant it belongs to instead",
-                            wrote, item, shown
-                        ),
-                    ));
+                if let Some(shown) = because::states_a_fact(&said.text) {
+                    diags.push(fact_in_reason(&rel, said.line, &said.wrote, &said.item, DIGITS_WRITTEN, &shown));
                 }
             }
             for (item, reason, line) in &f.reasons {
@@ -1594,27 +1747,11 @@ fn report_here(root: &Path) -> Report {
                 if r.because {
                     if let Some(value) = f.values.get(&item.to_lowercase()) {
                         if let Some(word) = because::restates_value(reason, *value) {
-                            diags.push(Diag::new(
-                                "E-FACT-IN-REASON",
-                                &rel,
-                                *line,
-                                format!(
-                                    "{}!({}) spells {} in prose, which is the value itself, so the reason goes stale the day the value changes. Say why this value and not another",
-                                    wrote, item, word
-                                ),
-                            ));
+                            diags.push(fact_in_reason(&rel, *line, &wrote, item, VALUE_SPELLED, &word));
                         }
                     }
                     if let Some(shown) = because::states_a_fact(reason) {
-                        diags.push(Diag::new(
-                            "E-FACT-IN-REASON",
-                            &rel,
-                            *line,
-                            format!(
-                                "{}!({}) writes {} into prose, so a value lives outside the spec where nothing checks it and nothing keeps two copies of it equal. Name it: a spec const if it is a value, or a source! item if it is the study, contract or release the reason rests on, then cite that instead",
-                                wrote, item, shown
-                            ),
-                        ));
+                        diags.push(fact_in_reason(&rel, *line, &wrote, item, DIGITS_WRITTEN, &shown));
                     }
                 }
                 let excusing = f.fns.iter().any(|(n, _, _)| n == item);
@@ -1644,17 +1781,17 @@ fn report_here(root: &Path) -> Report {
                     ));
                 }
             }
-            for (name, line, prefixed, public) in &f.named {
-                if z != zone::Zone::Spec && !public {
+            for held in &f.named {
+                if z != zone::Zone::Spec && !held.public {
                     continue;
                 }
-                let scope = match (z == zone::Zone::Spec, prefixed) {
+                let scope = match (z == zone::Zone::Spec, held.prefixed) {
                     (false, _) => zones.crate_of(&rel),
                     (true, true) => boundary::context_of(&rel)
                         .unwrap_or_else(|| zones.crate_of(&rel)),
                     (true, false) => String::new(),
                 };
-                exported.push((format!("{}{}{}", scope, config::SLASH, name), rel.clone(), *line));
+                exported.push((format!("{}{}{}", scope, config::SLASH, held.name), rel.clone(), held.line));
             }
             if z == zone::Zone::Spec {
                 for source in &f.sources {
@@ -1808,70 +1945,7 @@ fn report_here(root: &Path) -> Report {
         }
     }
 
-    let mut by_callee: HashMap<String, Vec<usize>> = HashMap::new();
-    for (i, s) in shapes.iter().enumerate() {
-        for c in &s.profile.callees {
-            by_callee.entry(c.clone()).or_default().push(i);
-        }
-    }
-    let mut pairs: Vec<(usize, usize)> = Vec::new();
-    for sharing in by_callee.values() {
-        for x in 0..sharing.len() {
-            for y in (x + 1)..sharing.len() {
-                let (lo, hi) = (sharing[x].min(sharing[y]), sharing[x].max(sharing[y]));
-                pairs.push((lo, hi));
-            }
-        }
-    }
-    pairs.sort();
-    pairs.dedup();
-    for (a, b) in pairs {
-        {
-            let (sa, sb) = (&shapes[a], &shapes[b]);
-            let (pa, fa, la, na) = (&sa.profile, &sa.file, sa.line, &sa.name);
-            let (pb, fb, lb, nb) = (&sb.profile, &sb.file, sb.line, &sb.name);
-            if (sa.binding || sb.binding) && fa != fb {
-                continue;
-            }
-            if pa.tokens.len().abs_diff(pb.tokens.len()) > MAX_DRIFT {
-                continue;
-            }
-            if sa.dictated || sb.dictated {
-                continue;
-            }
-            if names_each_other(sa, sb) {
-                continue;
-            }
-            if !pa.composed || !pb.composed {
-                continue;
-            }
-            let shortest = pa.tokens.len().min(pb.tokens.len());
-            if shortest < MIN_SHAPE_TOKENS {
-                continue;
-            }
-            let apart = shape::drift(pa, pb);
-            if apart == 0 || apart > MAX_DRIFT {
-                continue;
-            }
-            if !shape::only_names_differ(pa, pb) {
-                continue;
-            }
-            diags.push(Diag::new(
-                "E-NEAR-PATTERN",
-                fb,
-                lb,
-                format!(
-                    "{} is {} from {} at {}:{} ({}). Parameterise the difference",
-                    nb,
-                    tally(apart, "edit", "edits"),
-                    na,
-                    fa,
-                    la,
-                    shape::shown(&shape::differing(&pa.tokens, &pb.tokens))
-                ),
-            ));
-        }
-    }
+    diags.extend(near_duplicate_shapes(&shapes));
 
     for (name, file, line) in &reasoned_items {
         let named = mentions.get(name).copied().unwrap_or_default();
@@ -1952,65 +2026,7 @@ fn report_here(root: &Path) -> Report {
         }
     }
 
-    for a in 0..vocabs.len() {
-        for b in (a + 1)..vocabs.len() {
-            let (na, ca, fa, la, ea, xa) = &vocabs[a];
-            let (nb, cb, fb, lb, eb, xb) = &vocabs[b];
-            if *xa || *xb || ca == cb {
-                continue;
-            }
-            let apart = shape::set_apart(na, nb);
-            let smallest = na.len().min(nb.len());
-            if apart > smallest {
-                continue;
-            }
-            let a_shared = ca == boundary::SHARED;
-            let b_shared = cb == boundary::SHARED;
-            let (file, line, mine, ctx, theirs) = if a_shared {
-                (fb, lb, eb, cb, ea)
-            } else if b_shared {
-                (fa, la, ea, ca, eb)
-            } else {
-                (fb, lb, eb, cb, ea)
-            };
-            let shared = a_shared || b_shared;
-            let note = if shared && apart == 0 {
-                format!(
-                    "{} in {} repeats contexts::shared::vocabulary::{}; name the shared type instead",
-                    mine, ctx, theirs
-                )
-            } else if shared {
-                format!(
-                    "{} in {} differs in {} variants from contexts::shared::vocabulary::{}",
-                    mine, ctx, apart, theirs
-                )
-            } else if apart == 0 {
-                format!(
-                    "{} in {} and {} in {} are the same vocabulary; move it to contexts/shared",
-                    eb, cb, ea, ca
-                )
-            } else {
-                format!(
-                    "{} in {} differs in {} variants from {} in {} at {}:{}",
-                    eb, cb, apart, ea, ca, fa, la
-                )
-            };
-            diags.push(Diag::new("E-DUP-VOCABULARY", file, *line, note));
-            if !shared {
-                let back = match apart == 0 {
-                    true => format!(
-                        "{} in {} and {} in {} are the same vocabulary; move it to contexts/shared",
-                        ea, ca, eb, cb
-                    ),
-                    false => format!(
-                        "{} in {} differs in {} variants from {} in {} at {}:{}",
-                        ea, ca, apart, eb, cb, fb, lb
-                    ),
-                };
-                diags.push(Diag::new("E-DUP-VOCABULARY", fa, *la, back));
-            }
-        }
-    }
+    diags.extend(overlapping_vocabularies(&vocabs));
 
     let meta = cargo::read(root);
     if meta.is_none() && root.join("Cargo.toml").is_file() {

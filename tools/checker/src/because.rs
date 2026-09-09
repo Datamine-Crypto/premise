@@ -15,9 +15,24 @@ because!(
     "the least a reason can add beyond the words the item name already contains"
 );
 
+pub struct Named {
+    pub name: String,
+    pub line: usize,
+    pub prefixed: bool,
+    pub public: bool,
+}
+
+pub struct Prose {
+    pub wrote: String,
+    pub item: String,
+    pub text: String,
+    pub last: String,
+    pub line: usize,
+}
+
 pub struct Found {
     pub chosen: Vec<(String, usize, String)>,
-    pub named: Vec<(String, usize, bool, bool)>,
+    pub named: Vec<Named>,
     pub values: HashMap<String, i128>,
     pub declared: HashSet<String>,
     pub impls: Vec<(String, String)>,
@@ -25,7 +40,7 @@ pub struct Found {
     pub cited: Vec<String>,
     pub reasons: Vec<(String, String, usize)>,
     pub written_as: HashMap<String, String>,
-    pub prose: Vec<(String, String, String, String, usize)>,
+    pub prose: Vec<Prose>,
     pub decisions: Vec<(String, String, Vec<String>, String, usize)>,
     pub unit_sums: Vec<(String, usize)>,
     pub fns: Vec<(String, usize, bool)>,
@@ -266,12 +281,12 @@ fn scan_items(items: &[syn::Item], f: &mut Found) {
                 f.declared.insert(crate::names::plain(&st.ident));
                 f.defined.insert(crate::names::plain(&st.ident));
                 f.value_items.insert(crate::names::plain(&st.ident));
-                f.named.push((
-                    crate::names::plain(&st.ident),
-                    st.span().start().line,
-                    false,
-                    matches!(st.vis, syn::Visibility::Public(_)),
-                ));
+                f.named.push(Named {
+                    name: crate::names::plain(&st.ident),
+                    line: st.span().start().line,
+                    prefixed: false,
+                    public: matches!(st.vis, syn::Visibility::Public(_)),
+                });
                 if !names_anything(&st.expr) {
                     f.chosen.push((
                         crate::names::plain(&st.ident),
@@ -285,12 +300,12 @@ fn scan_items(items: &[syn::Item], f: &mut Found) {
                 f.defined.insert(crate::names::plain(&c.ident));
                 f.value_items.insert(crate::names::plain(&c.ident));
                 if crate::names::plain(&c.ident) != "_" {
-                    f.named.push((
-                        crate::names::plain(&c.ident),
-                        c.span().start().line,
-                        false,
-                        matches!(c.vis, syn::Visibility::Public(_)),
-                    ));
+                    f.named.push(Named {
+                        name: crate::names::plain(&c.ident),
+                        line: c.span().start().line,
+                        prefixed: false,
+                        public: matches!(c.vis, syn::Visibility::Public(_)),
+                    });
                 }
                 if let syn::Expr::Lit(l) = &*c.expr {
                     if let syn::Lit::Int(v) = &l.lit {
@@ -355,12 +370,12 @@ fn scan_items(items: &[syn::Item], f: &mut Found) {
                                 true => format!("{}_{}_{}", target, marked, crate::names::plain(&c.ident)),
                                 false => format!("{}_{}", target, crate::names::plain(&c.ident)),
                             };
-                            f.named.push((
-                                under,
-                                c.span().start().line,
-                                true,
-                                true,
-                            ));
+                            f.named.push(Named {
+                                name: under,
+                                line: c.span().start().line,
+                                prefixed: true,
+                                public: true,
+                            });
                         }
                     }
                 }
@@ -447,7 +462,7 @@ fn scan_items(items: &[syn::Item], f: &mut Found) {
                         f.declared.insert(held.clone());
                         f.defined.insert(held.clone());
                         f.value_items.insert(held.clone());
-                        f.named.push((held, m.span().start().line, false, false));
+                        f.named.push(Named { name: held, line: m.span().start().line, prefixed: false, public: false });
                     }
                     continue;
                 }
@@ -474,7 +489,7 @@ fn scan_items(items: &[syn::Item], f: &mut Found) {
                 let text = said.join(" ");
                 if name == "rejected" || name == "supersedes" {
                     let last = said.last().cloned().unwrap_or_default();
-                    f.prose.push((name, item, text, last, line));
+                    f.prose.push(Prose { wrote: name, item, text, last, line });
                     continue;
                 }
                 if name == "decided" {
