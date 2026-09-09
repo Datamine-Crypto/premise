@@ -100,7 +100,7 @@ from above the crate directory, so a packaged tarball would ship without the man
 explains itself from. Take them from the repository instead:
 
 ```sh
-cargo install --git https://github.com/Datamine-Crypto/premise premise_gate
+cargo install --git https://github.com/Datamine-Crypto/premise premise_gate premise_checker
 ```
 
 Publish the four libraries in dependency order: `premise_macros`, then `premise`, then the other
