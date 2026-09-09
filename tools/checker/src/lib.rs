@@ -472,7 +472,7 @@ fn manifest_comments(root: &Path) -> Vec<(String, usize)> {
                     out.push((inside.clone(), at + 1));
                 }
             }
-            for key in manifest::prose_fields(&text) {
+            for key in manifest::prose_fields(&text, &p) {
                 let at = text.lines().position(|l| l.trim_start().starts_with(&key)).map(|n| n + 1).unwrap_or_default();
                 out.push((format!("{} ({})", inside, key), at));
             }

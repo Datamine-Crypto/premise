@@ -6,6 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
+readme = "../README.md"
 description = "the Worker library of Premise: records in D1, compressed objects in R2, JSON field shapes and the HTTP edge helpers a Worker binds its own policy to"
 
 [dependencies]

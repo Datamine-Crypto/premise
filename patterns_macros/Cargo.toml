@@ -6,6 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
+readme = "../README.md"
 description = "the reason macros of Premise, because and source, and the Record derive that reads a struct as fields"
 
 [lib]

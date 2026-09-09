@@ -190,13 +190,23 @@ patterns_macros::because!(
     "the one prose entry a registry demands before it accepts a crate, so it is read as a reason for the crate rather than refused: it must pass the same checks a because! passes"
 );
 
+pub const README: &str = "readme";
+patterns_macros::because!(
+    README,
+    "the one entry in the list whose value a registry reads as a path rather than as text, so it is read as a pointer at prose that already exists rather than as prose hidden in a manifest"
+);
+
 fn reads_as_reason(package: &str, value: &str) -> bool {
     crate::because::weak(package, value).is_none()
         && crate::because::states_a_fact(value).is_none()
         && crate::because::leans_on(value).is_none()
 }
 
-pub fn prose_fields(text: &str) -> Vec<String> {
+fn points_at_a_file(at: &std::path::Path, value: &str) -> bool {
+    at.parent().map(|dir| dir.join(value).is_file()).unwrap_or(false)
+}
+
+pub fn prose_fields(text: &str, at: &std::path::Path) -> Vec<String> {
     let doc: Value = match text.parse() {
         Ok(v) => v,
         Err(_) => return Vec::new(),
@@ -212,7 +222,8 @@ pub fn prose_fields(text: &str) -> Vec<String> {
         if let Some(t) = t.and_then(|t| t.as_table()) {
             for (key, value) in t {
                 let described = key == DESCRIPTION && value.as_str().map(|v| reads_as_reason(package, v)).unwrap_or(false);
-                if PROSE_FIELDS.contains(&key.as_str()) && !described {
+                let pointed = key == README && value.as_str().map(|v| points_at_a_file(at, v)).unwrap_or(false);
+                if PROSE_FIELDS.contains(&key.as_str()) && !described && !pointed {
                     found.push(key.clone());
                 }
             }

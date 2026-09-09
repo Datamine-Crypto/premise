@@ -803,3 +803,40 @@ fn every_test_program_of_this_crate_is_one_the_gate_would_run() {
         names
     );
 }
+
+#[test]
+fn a_readme_that_names_a_file_is_a_pointer_and_one_that_names_nothing_is_not() {
+    let dir = std::env::temp_dir().join(format!("premise_readme_probe_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let src = dir.join("spec").join("src");
+    std::fs::create_dir_all(&src).unwrap();
+    std::fs::write(dir.join("Cargo.toml"), "[workspace]\nmembers = [\"spec\"]\n").unwrap();
+    std::fs::write(dir.join("premise.zones"), "spec = spec\n").unwrap();
+    std::fs::write(src.join("lib.rs"), "pub const A: u32 = 1;\n").unwrap();
+    std::fs::write(dir.join("spec").join("MANUAL.md"), "the prose, stated once\n").unwrap();
+    let manifest = |readme: &str| {
+        format!(
+            "[package]\nname = \"spec\"\nversion = \"0.1.0\"\nedition = \"2021\"\nreadme = \"{}\"\n",
+            readme
+        )
+    };
+    let flagged = |at: &std::path::Path| {
+        checker::run(at)
+            .iter()
+            .any(|d| d.code == "E-COMMENT" && d.file.contains("readme"))
+    };
+
+    std::fs::write(dir.join("spec").join("Cargo.toml"), manifest("MANUAL.md")).unwrap();
+    assert!(
+        !flagged(&dir),
+        "a readme naming a file that exists points at prose the tree already holds, and is not prose hidden in a manifest"
+    );
+
+    std::fs::write(dir.join("spec").join("Cargo.toml"), manifest("GONE.md")).unwrap();
+    assert!(
+        flagged(&dir),
+        "a readme naming a file that does not exist is a fact that has drifted, and nothing else in the tree would catch it"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
