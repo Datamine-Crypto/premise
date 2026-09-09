@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
-readme = "../README.md"
+readme = "README.md"
 description = "the chain library of Premise: account addresses with their checksum, keccak digests, and the decoding of event logs by a declared layout"
 
 [dependencies]

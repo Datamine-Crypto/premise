@@ -70,9 +70,14 @@ One limit, stated up front. Nobody has yet shown that a reader orients faster in
 than in a documented one. That is the thesis, it needs a real team on a real system over months, and
 until somebody runs it the claim stays a claim.
 
-**This file is the whole of the prose.** There is no second document, no wiki and no doc comment,
-because a second copy is the thing this project exists to remove. Read it in order the first time.
-Everything after "Run the gate" is reference you will come back to.
+**This file is the whole of the prose about the discipline.** There is no second manual, no wiki
+and no doc comment, because a second copy is the thing this project exists to remove. Read it in
+order the first time. Everything after "Run the gate" is reference you will come back to.
+
+Each published crate carries a short README of its own, because a registry page needs to say what
+that one crate is for and this file is the wrong length for that. Those are shop windows: they name
+what a crate holds and point back here. Nothing about how Premise works is stated in them, they are
+not read by any check, and a fact that only lives in one is a fact in the wrong place.
 
 ## 📦 The crates
 
@@ -153,6 +158,12 @@ and the gate does not run its tests: the library answers to its own gate in its 
 path in the code may then start from the library's crate name or from the crate name of any
 member the `patterns` zone holds, and a project's own pattern crate carries a name of its own,
 since the library already took `patterns`.
+
+The laws read `.rs` files and manifests, and nothing else. A markdown file is in no zone and is
+governed by no law, which is why a crate may carry a README without needing an exemption. The one
+place a manifest touches prose is the `readme` entry, and that is allowed because its value is a
+path rather than a sentence: a path that names a file which is not there is `E-COMMENT`, since a
+pointer at prose that has moved is a fact that has drifted and nothing else would catch it.
 
 ## 📚 Before writing any logic, read the library
 
