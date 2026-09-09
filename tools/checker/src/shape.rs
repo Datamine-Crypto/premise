@@ -9,7 +9,7 @@ pub const MARK: char = 64u8 as char;
 const LENGTH_GAP_CUTOFF: usize = 8;
 patterns_macros::because!(
     LENGTH_GAP_CUTOFF,
-    "beyond eight tokens of length difference the pair is a different function"
+    "the length difference beyond which the pair is a different function"
 );
 
 pub struct Profile {

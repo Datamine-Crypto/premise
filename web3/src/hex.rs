@@ -22,7 +22,7 @@ const HIGH_NIBBLE: u8 = 8;
 because!(HIGH_NIBBLE, Eip55, "the nibble value from which the checksum capitalises the letter at that position, the top half of the sixteen values a nibble takes");
 
 const NIBBLES_PER_BYTE: usize = 2;
-because!(NIBBLES_PER_BYTE, Eip55, "the two hex digits one byte of the hash answers for, the high nibble first, which is how a digit position maps onto the hash");
+because!(NIBBLES_PER_BYTE, Eip55, "the hex digits one byte of the hash answers for, the high nibble first, which is how a digit position maps onto the hash");
 
 const LOW_NIBBLE_MASK: u8 = 15;
 because!(LOW_NIBBLE_MASK, Eip55, "the bits of a byte that hold its low nibble, every bit of the lower half set, which keeps the low digit once the high one has been shifted away");
@@ -113,7 +113,7 @@ because!(short_label, "the first few characters of an address followed by an ell
 const ELLIPSIS: [char; ELLIPSIS_DOTS] = ['.', '.', '.'];
 
 const ELLIPSIS_DOTS: usize = 3;
-because!(ELLIPSIS_DOTS, AddressWidth, "the three dots that stand for the rest of a shortened address, three because a single dot reads as a sentence end and two as a typo");
+because!(ELLIPSIS_DOTS, AddressWidth, "the dots that stand for the rest of a shortened address, enough that a reader takes them for neither a sentence end nor a typo");
 
 impl Fielded for Address {
     fn field(&self) -> Field {

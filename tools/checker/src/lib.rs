@@ -19,19 +19,19 @@ use patterns_macros::because;
 const MIN_SHAPE_TOKENS: usize = 12;
 because!(
     MIN_SHAPE_TOKENS,
-    "below twelve tokens two functions collide by coincidence rather than by copying"
+    "the length below which two functions collide by coincidence rather than by copying"
 );
 
 const MIN_VARIANTS: usize = 2;
 because!(
     MIN_VARIANTS,
-    "a single variant carries no vocabulary, so comparison begins at two"
+    "a single variant carries no vocabulary, so comparison begins where a choice does"
 );
 
 const MAX_DRIFT: usize = 2;
 because!(
     MAX_DRIFT,
-    "two edits is the widest gap where a pair still reads as one function copied"
+    "the widest gap in edits where a pair still reads as one function copied"
 );
 
 const STACK_BYTES: usize = 268435456;
@@ -700,7 +700,7 @@ fn value_items(items: &[syn::Item], plain: &mut HashMap<String, i128>, aliased: 
 const DECLARATION_ITSELF: usize = 1;
 because!(
     DECLARATION_ITSELF,
-    "the one mention every declared name has, its own declaration, so a name counted once over the whole tree is used by nothing and a name counted twice is used once"
+    "the mention every declared name has, its own declaration, so a name counted once over the whole tree is used by nothing and a name counted twice is used once"
 );
 
 fn reasoned_in(items: &[syn::Item], f: &because::Found, rel: &str, out: &mut Vec<(String, String, usize)>) {
@@ -1592,6 +1592,19 @@ fn report_here(root: &Path) -> Report {
             for (item, reason, line) in &f.reasons {
                 let wrote = f.written_as.get(item).cloned().unwrap_or_default();
                 if r.because {
+                    if let Some(value) = f.values.get(&item.to_lowercase()) {
+                        if let Some(word) = because::restates_value(reason, *value) {
+                            diags.push(Diag::new(
+                                "E-FACT-IN-REASON",
+                                &rel,
+                                *line,
+                                format!(
+                                    "{}!({}) spells {} in prose, which is the value itself, so the reason goes stale the day the value changes. Say why this value and not another",
+                                    wrote, item, word
+                                ),
+                            ));
+                        }
+                    }
                     if let Some(shown) = because::states_a_fact(reason) {
                         diags.push(Diag::new(
                             "E-FACT-IN-REASON",

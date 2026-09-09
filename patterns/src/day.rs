@@ -49,7 +49,7 @@ const MONTH_DAY_OFFSET: i64 = 2;
 because!(MONTH_DAY_OFFSET, CivilCalendar, "the offset in the same five month rule");
 
 const MONTH_DAY_DIVISOR: i64 = 5;
-because!(MONTH_DAY_DIVISOR, CivilCalendar, "what the scaled day count is divided by in the five month rule, the months that rule spans");
+because!(MONTH_DAY_DIVISOR, CivilCalendar, "what the scaled day count is divided by in the month rule, the months that rule spans");
 
 const MONTHS_IN_YEAR: i64 = 12;
 because!(MONTHS_IN_YEAR, CivilCalendar, "the months in a year, where the shifted month wraps");

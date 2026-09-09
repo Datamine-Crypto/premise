@@ -15,7 +15,7 @@ pub fn hex_text(bytes: &[u8]) -> String {
 because!(hex_text, "bytes as lowercase hex digits with no prefix, the form the stores key on, so a key never differs from itself by case");
 
 const OPENER_CHARS: usize = 2;
-because!(OPENER_CHARS, HexNotation, "the two characters of the opener, a zero and an x, that prefixed adds and unprefixed removes");
+because!(OPENER_CHARS, HexNotation, "the characters of the opener, a zero and an x, that prefixed adds and unprefixed removes");
 
 pub fn prefixed(text: &str) -> String {
     let mut out = String::with_capacity(text.len() + OPENER_CHARS);

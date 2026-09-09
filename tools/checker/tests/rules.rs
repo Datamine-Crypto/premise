@@ -926,3 +926,39 @@ fn a_reason_on_a_thread_local_names_something_that_is_declared() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_reason_may_not_spell_the_value_it_explains() {
+    let dir = std::env::temp_dir().join(format!("premise_spelled_probe_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let src = dir.join("spec").join("src");
+    std::fs::create_dir_all(&src).unwrap();
+    std::fs::write(dir.join("Cargo.toml"), "[workspace]\nmembers = [\"spec\"]\n").unwrap();
+    std::fs::write(dir.join("premise.zones"), "spec = spec\n").unwrap();
+    std::fs::write(
+        dir.join("spec").join("Cargo.toml"),
+        "[package]\nname = \"spec\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    )
+    .unwrap();
+    let stated = |body: &str| {
+        std::fs::write(src.join("lib.rs"), body).unwrap();
+        checker::run(&dir)
+            .iter()
+            .any(|d| d.code == "E-FACT-IN-REASON")
+    };
+
+    assert!(
+        stated("pub const OPEN_LIMIT: u32 = 3;\nbecause!(OPEN_LIMIT, \"three openings is where the test showed hinge fatigue\");\n"),
+        "a reason that spells its own value states the constant twice, and the second copy is where nothing checks it"
+    );
+    assert!(
+        !stated("pub const OPEN_LIMIT: u32 = 3;\nbecause!(OPEN_LIMIT, \"the opening count at which the test showed hinge fatigue\");\n"),
+        "a reason that says what the value counts, without saying the value, is the whole point"
+    );
+    assert!(
+        !stated("pub const OPEN_LIMIT: u32 = 3;\nbecause!(OPEN_LIMIT, \"the count the test settled on, of the two the report offered\");\n"),
+        "a number that is not this item's value is ordinary English and must not be refused"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}

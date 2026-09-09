@@ -10,7 +10,7 @@ patterns_macros::because!(
 const BAD_ARGUMENT: i32 = 2;
 patterns_macros::because!(
     BAD_ARGUMENT,
-    "the exit status for a command line the checker could not read, kept apart from the status a failed check exits with so a script can tell the two apart"
+    "the exit status for a command line the checker could not read, kept apart from the status a failed check exits with so a script can tell them apart"
 );
 
 fn main() {

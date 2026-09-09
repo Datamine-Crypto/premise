@@ -101,7 +101,7 @@ patterns_macros::because!(
 const BAD_ARGUMENT: i32 = 2;
 patterns_macros::because!(
     BAD_ARGUMENT,
-    "the exit status for a command line the gate could not read or a cargo it could not run, kept apart from a failed step so a script can tell the two apart"
+    "the exit status for a command line the gate could not read or a cargo it could not run, kept apart from a failed step so a script can tell them apart"
 );
 
 const UNVERIFIED: i32 = 3;

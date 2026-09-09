@@ -21,4 +21,4 @@ pub enum Fault {
 }
 
 pub const OPEN_LIMIT: u32 = 3;
-because!(OPEN_LIMIT, WearTest, "three openings is where the test showed hinge fatigue");
+because!(OPEN_LIMIT, WearTest, "the opening count at which the test showed hinge fatigue");

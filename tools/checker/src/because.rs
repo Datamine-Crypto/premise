@@ -6,13 +6,13 @@ use patterns_macros::because;
 const MIN_REASON_WORDS: usize = 4;
 because!(
     MIN_REASON_WORDS,
-    "four words is the shortest phrase that can state a cause rather than name a thing"
+    "the shortest phrase that can state a cause rather than name a thing"
 );
 
 const MIN_NOVEL_WORDS: usize = 3;
 because!(
     MIN_NOVEL_WORDS,
-    "three words the item name does not already contain is the least that adds anything a reader did not have"
+    "the least a reason can add beyond the words the item name already contains"
 );
 
 pub struct Found {
@@ -617,5 +617,54 @@ fn brought_in(t: &syn::UseTree, out: &mut HashSet<String>) {
             }
         }
         syn::UseTree::Glob(_) => {}
+    }
+}
+
+pub const SPELLED: &[(&str, i128)] = &[
+    ("zero", 0),
+    ("one", 1),
+    ("two", 2),
+    ("three", 3),
+    ("four", 4),
+    ("five", 5),
+    ("six", 6),
+    ("seven", 7),
+    ("eight", 8),
+    ("nine", 9),
+    ("ten", 10),
+    ("eleven", 11),
+    ("twelve", 12),
+    ("thirteen", 13),
+    ("fourteen", 14),
+    ("fifteen", 15),
+    ("sixteen", 16),
+    ("seventeen", 17),
+    ("eighteen", 18),
+    ("nineteen", 19),
+    ("twenty", 20),
+    ("thirty", 30),
+    ("forty", 40),
+    ("fifty", 50),
+    ("sixty", 60),
+    ("seventy", 70),
+    ("eighty", 80),
+    ("ninety", 90),
+    ("hundred", 100),
+    ("thousand", 1000),
+];
+patterns_macros::because!(
+    SPELLED,
+    "the words a whole number is written as in English, so a reason that spells out the value it explains is caught the way one that types the digits already is"
+);
+
+pub fn restates_value(reason: &str, value: i128) -> Option<String> {
+    let word = SPELLED.iter().find(|(_, n)| *n == value).map(|(w, _)| *w)?;
+    let said = reason.to_lowercase();
+    let spoken = said
+        .split(|c: char| !c.is_alphanumeric())
+        .any(|w| w == word);
+    match spoken {
+        true => Some(String::from(word)),
+        false => None,
     }
 }

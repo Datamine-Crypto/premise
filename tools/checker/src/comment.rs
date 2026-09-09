@@ -2,7 +2,7 @@ pub const BSLASH: char = 92u8 as char;
 const CHAR_LITERAL_WIDTH: usize = 3;
 patterns_macros::because!(
     CHAR_LITERAL_WIDTH,
-    "a quoted single character spans three positions, opening tick, glyph, closing tick"
+    "what a quoted single character spans, opening tick, glyph, closing tick"
 );
 
 fn is_ident_char(c: char) -> bool {

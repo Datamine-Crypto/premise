@@ -54,7 +54,7 @@ pub struct WearTest;
 source!(WearTest, "the hinge fatigue test run on the entry door before fit-out");
 
 pub const OPEN_LIMIT: u32 = 3;
-because!(OPEN_LIMIT, WearTest, "three openings is where the test showed hinge fatigue");
+because!(OPEN_LIMIT, WearTest, "the opening count at which the test showed hinge fatigue");
 ```
 
 Delete that `because!` and the build fails. Write a second one for the same item and the build
@@ -631,7 +631,7 @@ pub enum Event { Opened, Locked }
 pub enum Fault { Worn, AlreadyLocked }
 
 pub const OPEN_LIMIT: u32 = 3;
-because!(OPEN_LIMIT, WearTest, "three openings is where the test showed hinge fatigue");
+because!(OPEN_LIMIT, WearTest, "the opening count at which the test showed hinge fatigue");
 ```
 
 ```rust
@@ -1053,7 +1053,11 @@ because!(Warehouse, Relocation2025, "the store that move created");
 ```
 
 `E-FACT-IN-REASON` refuses a number in the prose, in `rejected!` and `supersedes!` as much as in
-`because!`. `E-UNDECLARED-SOURCE` refuses a citation to something nothing declares, and a reason
+`because!`, and refuses one written as a word when the word is the value the reason explains. A
+reason that says "three openings is where the test showed hinge fatigue" states the constant twice,
+once where rustc reads it and once where nothing does, and it becomes a lie the day the constant
+becomes four. Say what the value is the count of, and let the value stay the only place it is
+written. `E-UNDECLARED-SOURCE` refuses a citation to something nothing declares, and a reason
 whose prose names a review or a study while citing nothing. `E-UNTRACEABLE` refuses a pattern
 constant that cites no `source!` item; citing a type is not citing a source. `E-DEAD-SOURCE` refuses
 a source nothing cites. Two constants from one study now cite one item, and renaming or deleting the
@@ -1183,7 +1187,12 @@ to discover one by falling into it.
 
 - **No check reads what a reason means.** See "A relation is not a reason".
 - **The match rule is spelling, not meaning.** See "Edges worth knowing before you hit them".
-- **`E-FACT-IN-REASON` sees digits, not numbers.** See "A reason is not a place to put facts".
+- **`E-FACT-IN-REASON` reads a spelled number only against the value it explains.** Digits are
+  refused anywhere in a reason. A number written as a word is refused only when it is the value of
+  the item the reason is attached to, because "one of two ways" is ordinary English far more often
+  than it is a value, and a check that refused it everywhere would be unusable. So a reason on a
+  constant of 3 may not say "three", and a reason beside it may. See "A reason is not a place to
+  put facts".
 - **`E-UNDECLARED-SOURCE` sees a word list.** See the `E-UNDECLARED-SOURCE` row of the checks
   table; policy, standard and release are not on the list because they are ordinary English as
   often as they are documents.
