@@ -30,12 +30,12 @@ because!(joined_lists, "several lists as one in order, so a reducer that builds 
 pub fn any_true(flags: &[bool]) -> bool {
     flags.iter().any(|f| *f)
 }
-because!(any_true, "whether any of several conditions holds, the or a binding may not write as an operator");
+because!(any_true, "whether any of several conditions holds, the or a binding may not write as an operator, paired with all_true which asks the same of every one");
 
 pub fn all_true(flags: &[bool]) -> bool {
     flags.iter().all(|f| *f)
 }
-because!(all_true, "whether every one of several conditions holds, the and a binding may not write as an operator");
+because!(all_true, "whether every one of several conditions holds, the and a binding may not write as an operator, paired with any_true which asks the same of any one");
 
 pub fn is_some<T>(value: &Option<T>) -> bool {
     value.is_some()

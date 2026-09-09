@@ -97,6 +97,7 @@ impl<'ast> Visit<'ast> for HasCall {
     }
 
     fn visit_expr_method_call(&mut self, c: &'ast syn::ExprMethodCall) {
+        self.found = true;
         self.names.insert(crate::names::plain(&c.method));
         visit::visit_expr_method_call(self, c);
     }

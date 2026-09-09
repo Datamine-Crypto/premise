@@ -60,7 +60,7 @@ because!(moved_total, "a running total moved with no day row written, for supply
 pub fn amount_of<S: Ord>(totals: &Totals<S>, series: &S) -> i128 {
     totals.get(series).map(|r| r.amount).unwrap_or(0)
 }
-because!(amount_of, "where a running total stands, or zero for a series nothing has moved yet");
+because!(amount_of, "where a running total stands, or zero for a series nothing has moved yet, the other half of count_of");
 
 pub fn count_of<S: Ord>(totals: &Totals<S>, series: &S) -> i64 {
     totals.get(series).map(|r| r.count).unwrap_or(0)

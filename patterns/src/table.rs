@@ -35,12 +35,12 @@ because!(rows, "the values of a keyed table in key order without their keys, for
 pub fn latest<K: Ord + Copy, V: Clone>(map: &BTreeMap<K, V>) -> Option<(K, V)> {
     map.iter().next_back().map(|(k, v)| (*k, v.clone()))
 }
-because!(latest, "the highest keyed entry of a table, which for a table keyed by day is the newest day it holds");
+because!(latest, "the highest keyed entry of a table, which for a table keyed by day is the newest day it holds, the far end from earliest");
 
 pub fn earliest<K: Ord + Copy, V: Clone>(map: &BTreeMap<K, V>) -> Option<(K, V)> {
     map.iter().next().map(|(k, v)| (*k, v.clone()))
 }
-because!(earliest, "the lowest keyed entry of a table, the oldest day of a series, which a lookup before the series began falls back to");
+because!(earliest, "the lowest keyed entry of a table, the oldest day of a series, which a lookup before the series began falls back to, the near end from latest");
 
 pub fn at_or_before<K: Ord + Copy, V: Clone>(map: &BTreeMap<K, V>, key: K) -> Option<V> {
     map.range(..=key).next_back().map(|(_, v)| v.clone())

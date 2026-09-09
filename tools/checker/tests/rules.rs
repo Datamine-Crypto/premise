@@ -962,3 +962,45 @@ fn a_reason_may_not_spell_the_value_it_explains() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_body_whose_only_calls_are_methods_is_still_compared() {
+    let dir = std::env::temp_dir().join(format!("premise_method_probe_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let src = dir.join("patterns").join("src");
+    std::fs::create_dir_all(&src).unwrap();
+    std::fs::write(dir.join("Cargo.toml"), "[workspace]\nmembers = [\"patterns\"]\n").unwrap();
+    std::fs::write(dir.join("premise.zones"), "patterns = patterns\n").unwrap();
+    std::fs::write(
+        dir.join("patterns").join("Cargo.toml"),
+        "[package]\nname = \"patterns\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    )
+    .unwrap();
+    let held = concat!(
+        "pub fn opened(text: &str) -> String {\n",
+        "    let mut out = String::new();\n",
+        "    for part in text.split(' ') {\n",
+        "        out.push_str(part.trim_start());\n",
+        "    }\n",
+        "    out\n",
+        "}\n",
+        "because!(opened, \"every word of a line with its leading space taken off, so a column reads flush\");\n",
+        "pub fn closed(text: &str) -> String {\n",
+        "    let mut out = String::new();\n",
+        "    for part in text.split(' ') {\n",
+        "        out.push_str(part.trim_end());\n",
+        "    }\n",
+        "    out\n",
+        "}\n",
+        "because!(closed, \"every word of a line with its trailing space taken off, so a column reads flush\");\n",
+    );
+    std::fs::write(src.join("lib.rs"), held).unwrap();
+    let flagged = checker::run(&dir)
+        .iter()
+        .any(|d| d.code == "E-NEAR-PATTERN");
+    assert!(
+        flagged,
+        "a pair differing only by a method name is a copy and a rename, and was invisible while only a free call marked a body as composed"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
