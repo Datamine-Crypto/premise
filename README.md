@@ -3,7 +3,7 @@
 [![gate](https://github.com/Datamine-Crypto/premise/actions/workflows/gate.yml/badge.svg)](https://github.com/Datamine-Crypto/premise/actions/workflows/gate.yml)
 [![crates.io](https://img.shields.io/crates/v/premise.svg)](https://crates.io/crates/premise)
 [![docs.rs](https://img.shields.io/docsrs/premise)](https://docs.rs/premise)
-[![MSRV](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://blog.rust-lang.org/)
+[![MSRV](https://img.shields.io/badge/rust-1.90%2B-orange.svg)](https://blog.rust-lang.org/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **A Rust discipline for codebases that AI agents write.** Documentation is abolished: every fact
