@@ -882,19 +882,19 @@ pub fn report(root: &Path) -> Report {
     on_big_stack(move || report_here(&here))
 }
 
-const HOLE: &str = "{}";
+const HOLE: &str = "{shown}";
 because!(
     HOLE,
-    "where the offending words go in a message written once and filled in per site, so two reports of one check are one string rather than two that drift"
+    "the named gap where the offending words go in a message written once and filled in per site, so two reports of one check are one string rather than two that drift, and named rather than bare so a maintainer editing the sentence can see what the gap holds"
 );
 
-const DIGITS_WRITTEN: &str = "writes {} into prose, so a value lives outside the spec where nothing checks it and nothing keeps two copies of it equal. Name it: a spec const if it is a value, or a source! item if it is the study, contract or release the reason rests on, then cite that instead";
+const DIGITS_WRITTEN: &str = "writes {shown} into prose, so a value lives outside the spec where nothing checks it and nothing keeps two copies of it equal. Name it: a spec const if it is a value, or a source! item if it is the study, contract or release the reason rests on, then cite that instead";
 because!(
     DIGITS_WRITTEN,
     "what a reason carrying digits is told, which is that the value now has a second copy nothing compares"
 );
 
-const VALUE_SPELLED: &str = "spells {} in prose, which is the value itself, so the reason goes stale the day the value changes. Say why this value and not another";
+const VALUE_SPELLED: &str = "spells {shown} in prose, which is the value itself, so the reason goes stale the day the value changes. Say why this value and not another";
 because!(
     VALUE_SPELLED,
     "what a reason spelling out its own item's value is told, which is a different fault from digits because the words read as English until the value moves"
@@ -2475,5 +2475,16 @@ pub fn refresh_census(root: &Path) -> Result<Option<(String, String)>, String> {
     match !was.is_empty() && was != now {
         true => Ok(Some((was, now))),
         false => Ok(None),
+    }
+}
+
+#[cfg(test)]
+mod messages {
+    #[test]
+    fn every_template_names_its_hole() {
+        for said in [super::DIGITS_WRITTEN, super::VALUE_SPELLED] {
+            assert_eq!(said.matches(super::HOLE).count(), 1, "{}", said);
+            assert!(said.replace(super::HOLE, "digits").contains("digits"));
+        }
     }
 }

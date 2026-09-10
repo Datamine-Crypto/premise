@@ -71,7 +71,11 @@ pub fn weak(item: &str, reason: &str) -> Option<String> {
     let stop: HashSet<&str> = STOP.iter().copied().collect();
     let w = words(reason);
     if w.len() < MIN_REASON_WORDS {
-        return Some(format!("reason is {} words", w.len()));
+        return Some(format!(
+            "reason is {}, and a reason states a cause in {} or more",
+            crate::tally(w.len(), "word", "words"),
+            MIN_REASON_WORDS
+        ));
     }
     let novel = w
         .iter()
